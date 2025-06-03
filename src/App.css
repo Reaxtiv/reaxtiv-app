@@ -1,0 +1,64 @@
+.big-label {
+  font-size: 38px !important;
+  color: #FFC32B !important;
+  font-weight: bold !important;
+  margin-bottom: 8px !important;
+  margin-top: 24px !important;
+  font-family: 'Piedra', cursive !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1.1 !important;
+}
+
+.big-input {
+  font-size: 36px !important;
+  padding: 20px 36px !important;
+  background: #232323 !important;
+  border: 3px solid #FFC32B !important;
+  border-radius: 22px !important;
+  color: #FFC32B !important;
+  font-family: 'Piedra', cursive !important;
+  margin-bottom: 22px !important;
+  font-weight: bold !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+.big-title {
+  font-size: 62px !important;
+  color: #FFC32B !important;
+  font-family: 'Orbitron', sans-serif !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 14px #FFD700, 0 0 8px #FFC32B88 !important;
+  margin-bottom: 18px !important;
+}
+
+.big-subtitle {
+  font-size: 44px !important;
+  color: #FFC32B !important;
+  font-family: 'Piedra', cursive !important;
+  font-weight: 700 !important;
+  margin-bottom: 34px !important;
+}
+
+.big-button {
+  font-size: 50px !important;
+  padding: 24px 62px !important;
+  border-radius: 36px !important;
+  background: #FFC32B !important;
+  color: #181511 !important;
+  font-weight: bold !important;
+  margin-top: 30px !important;
+  font-family: 'Piedra', cursive !important;
+  border: none !important;
+  box-shadow: 0 2px 14px #FFD70044 !important;
+  cursor: pointer !important;
+}
+
+.usdt-img {
+  width: 48px !important;
+  height: 48px !important;
+  margin-left: 18px !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
