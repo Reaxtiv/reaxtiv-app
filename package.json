@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@snapshot-labs/snapshot.js": "^0.12.62",
+    "@xmtp/xmtp-js": "^13.0.4",
+    "buffer": "^6.0.3",
     "ethers": "^6.14.3",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-icons": "^5.5.0",
     "react-scripts": "5.0.1"
   },
   "scripts": {

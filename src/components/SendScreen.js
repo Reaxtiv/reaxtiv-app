@@ -1,17 +1,74 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { sendETH } from "../utils/sendETH";
+import { getBalance } from "../utils/getBalance";
 
-export default function SendScreen() {
-  const [amount, setAmount] = useState("120");
-  const [to, setTo] = useState("0x8b...1234");
-  const [token, setToken] = useState("USDT");
+// Placeholder para balances ERC20 (DAI, USDT)
+const placeholderERC20Balance = async () => "0.00";
 
-  // Puedes agregar más logos locales si añades ETH, DAI, etc.
+function shortAddress(addr) {
+  if (!addr) return "";
+  return addr.slice(0, 6) + "..." + addr.slice(-4);
+}
+
+export default function SendScreen({ wallet }) {
+  const [amount, setAmount] = useState("");
+  const [to, setTo] = useState("");
+  const [token, setToken] = useState("ETH");
+  const [status, setStatus] = useState("");
+  const [txHash, setTxHash] = useState("");
+  const [balanceETH, setBalanceETH] = useState("");
+  const [balanceDAI, setBalanceDAI] = useState("0.00");
+  const [balanceUSDT, setBalanceUSDT] = useState("0.00");
+  const [loading, setLoading] = useState(false);
+
   const tokenLogos = {
     USDT: "/usdt.png",
     ETH: "/eth.png",
     DAI: "/dai.png"
   };
 
+  useEffect(() => {
+    if (!wallet) {
+      setBalanceETH("");
+      setBalanceDAI("0.00");
+      setBalanceUSDT("0.00");
+      return;
+    }
+    setLoading(true);
+    getBalance(wallet)
+      .then(setBalanceETH)
+      .catch(() => setBalanceETH("Error"));
+    placeholderERC20Balance().then(setBalanceDAI);
+    placeholderERC20Balance().then(setBalanceUSDT);
+    setLoading(false);
+  }, [wallet, txHash]);
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    setStatus("");
+    setTxHash("");
+    if (!to || !amount) {
+      setStatus("Enter destination address and amount.");
+      return;
+    }
+    if (token !== "ETH") {
+      setStatus("Only ETH sending is implemented yet.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const hash = await sendETH(to, amount);
+      setStatus("Transaction sent!");
+      setTxHash(hash);
+      setTo("");
+      setAmount("");
+    } catch (err) {
+      setStatus("Error: " + (err.message || "Unknown error"));
+    }
+    setLoading(false);
+  };
+
+  // --- UI ---
   return (
     <div
       style={{
@@ -20,121 +77,228 @@ export default function SendScreen() {
         color: "#FFC32B",
         fontFamily: "'Piedra', cursive",
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
+        flexDirection: "row",
+        alignItems: "flex-start",
         justifyContent: "flex-start",
-        paddingTop: 36
+        gap: 36,
+        position: "relative",
+        width: "100vw",
+        boxSizing: "border-box",
+        paddingLeft: 36,
+        paddingTop: 0
       }}
     >
-      <div
-        style={{
+      {/* Header Marca + Wallet en columna, más abajo y sin icono */}
+      <div style={{
+        position: "absolute",
+        left: 36,
+        top: 40, // Bajamos la marca y Wallet
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        zIndex: 10
+      }}>
+        <div style={{
           fontFamily: "'Orbitron', sans-serif",
           fontWeight: 700,
-          fontSize: 38,
+          fontSize: 36,
           letterSpacing: "0.04em",
           color: "#FFC32B",
-          marginBottom: 10
-        }}
-      >
-        RΞAXTIV
-      </div>
-      <div
-        style={{
+          lineHeight: 1.05,
+          marginBottom: 0,
+          textShadow: "none"
+        }}>
+          RΞAXTIV
+        </div>
+        <div style={{
           fontFamily: "'Piedra', cursive",
           fontSize: 32,
           color: "#FFC32B",
-          marginBottom: 28,
-        }}
-      >
-        Send Tokens
+          marginLeft: 2,
+          marginTop: 14,
+          fontWeight: 700,
+          letterSpacing: "0.03em",
+        }}>
+          Wallet
+        </div>
       </div>
+
+      {/* Espaciador para header, baja ambos recuadros */}
+      <div style={{ width: 1, minWidth: 1, marginRight: 0, height: 1 }} />
+
+      {/* Recuadro billetera conectada y saldos */}
       <div style={{
-        width: 340,
+        width: 440,
         background: "#232323",
         borderRadius: 28,
         boxShadow: "0 0 24px #18151177",
-        padding: "32px 28px 28px 28px",
-        marginBottom: 24
+        padding: "42px 30px 38px 30px",
+        marginBottom: 24,
+        marginTop: 200, // Más margen para que no se superponga jamás
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start"
       }}>
-        <div style={{display: "flex", alignItems: "center", marginBottom: 18}}>
-          <img src={tokenLogos[token]} alt={token} style={{width: 48, height: 48, marginRight: 16, borderRadius: 12}} />
-          <select
-            value={token}
-            onChange={e => setToken(e.target.value)}
+        <div style={{ fontSize: 19, color: "#FFC32B", fontWeight: 700, marginBottom: 12 }}>
+          Connected Wallet
+        </div>
+        <div style={{
+          fontFamily: "monospace",
+          color: "#fff",
+          fontSize: 22,
+          fontWeight: 700,
+          marginBottom: 20,
+          wordBreak: "break-all"
+        }}>
+          {wallet ? shortAddress(wallet) : "Not connected"}
+        </div>
+        <div style={{ width: "100%" }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 10
+          }}>
+            <img src={tokenLogos.ETH} alt="ETH" style={{ width: 28, height: 28, borderRadius: 8 }} />
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: 18 }}>ETH:</span>
+            <span style={{ color: "#FFC32B", fontWeight: 700, fontSize: 18 }}>
+              {loading ? "Loading..." : (balanceETH !== "" ? `${balanceETH} ETH` : "-")}
+            </span>
+          </div>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 10
+          }}>
+            <img src={tokenLogos.DAI} alt="DAI" style={{ width: 28, height: 28, borderRadius: 8 }} />
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: 18 }}>DAI:</span>
+            <span style={{ color: "#FFC32B", fontWeight: 700, fontSize: 18 }}>
+              {balanceDAI} DAI
+            </span>
+          </div>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 10
+          }}>
+            <img src={tokenLogos.USDT} alt="USDT" style={{ width: 28, height: 28, borderRadius: 8 }} />
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: 18 }}>USDT:</span>
+            <span style={{ color: "#FFC32B", fontWeight: 700, fontSize: 18 }}>
+              {balanceUSDT} USDT
+            </span>
+          </div>
+        </div>
+      </div>
+      {/* Recuadro de envío */}
+      <div style={{
+        width: 440,
+        background: "#232323",
+        borderRadius: 28,
+        boxShadow: "0 0 24px #18151177",
+        padding: "32px 20px 28px 20px",
+        marginBottom: 24,
+        marginTop: 200, // Misma altura que el recuadro de wallet
+      }}>
+        <form onSubmit={handleSend}>
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+            <img src={tokenLogos[token]} alt={token} style={{ width: 48, height: 48, marginRight: 16, borderRadius: 12 }} />
+            <select
+              value={token}
+              onChange={e => setToken(e.target.value)}
+              style={{
+                background: "#181511",
+                color: "#FFC32B",
+                border: "none",
+                borderRadius: 10,
+                fontSize: 22,
+                fontFamily: "'Piedra', cursive",
+                padding: "8px 16px",
+                marginLeft: 5,
+                marginRight: 5
+              }}
+            >
+              <option value="ETH">ETH</option>
+              <option value="USDT">USDT</option>
+              <option value="DAI">DAI</option>
+            </select>
+          </div>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ color: "#fff", fontSize: 18, marginBottom: 4, textAlign: "left" }}>To (address or ENS)</div>
+            <input
+              value={to}
+              onChange={e => setTo(e.target.value)}
+              placeholder="0x... or name.eth"
+              style={{
+                width: 420,
+                background: "#181511",
+                color: "#FFC32B",
+                border: "none",
+                borderRadius: 12,
+                padding: "10px 14px",
+                fontSize: 18,
+                fontFamily: "'Piedra', cursive",
+                marginBottom: 4
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ color: "#fff", fontSize: 18, marginBottom: 4, textAlign: "left" }}>Amount</div>
+            <input
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder="Amount"
+              style={{
+                width: 220,
+                background: "#181511",
+                color: "#FFC32B",
+                border: "none",
+                borderRadius: 12,
+                padding: "10px 14px",
+                fontSize: 18,
+                fontFamily: "'Piedra', cursive"
+              }}
+              type="number"
+              min={0}
+              step="any"
+              inputMode="decimal"
+            />
+          </div>
+          <button
+            type="submit"
             style={{
-              background: "#181511",
-              color: "#FFC32B",
-              border: "none",
-              borderRadius: 10,
+              width: "100%",
+              background: "#FFC32B",
+              color: "#181511",
+              fontWeight: 700,
               fontSize: 22,
+              border: "none",
+              borderRadius: 20,
+              padding: "18px",
               fontFamily: "'Piedra', cursive",
-              padding: "8px 16px",
-              marginLeft: 5,
-              marginRight: 5
+              cursor: loading ? "not-allowed" : "pointer",
+              marginTop: 16,
+              boxShadow: "0 0 16px #FFD700"
             }}
+            disabled={loading}
           >
-            <option value="USDT">USDT</option>
-            <option value="ETH">ETH</option>
-            <option value="DAI">DAI</option>
-          </select>
-        </div>
-        <div style={{marginBottom: 18}}>
-          <div style={{color: "#fff", fontSize: 18, marginBottom: 4}}>To (address or ENS)</div>
-          <input
-            value={to}
-            onChange={e => setTo(e.target.value)}
-            placeholder="0x... or name.eth"
-            style={{
-              width: "100%",
-              background: "#181511",
-              color: "#FFC32B",
-              border: "none",
-              borderRadius: 12,
-              padding: "13px 17px",
-              fontSize: 20,
-              fontFamily: "'Piedra', cursive",
-              marginBottom: 4
-            }}
-          />
-        </div>
-        <div style={{marginBottom: 18}}>
-          <div style={{color: "#fff", fontSize: 18, marginBottom: 4}}>Amount</div>
-          <input
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            placeholder="Amount"
-            style={{
-              width: "100%",
-              background: "#181511",
-              color: "#FFC32B",
-              border: "none",
-              borderRadius: 12,
-              padding: "13px 17px",
-              fontSize: 20,
-              fontFamily: "'Piedra', cursive"
-            }}
-            type="number"
-            min={0}
-          />
-        </div>
-        <button
-          style={{
-            width: "100%",
-            background: "#FFC32B",
-            color: "#181511",
-            fontWeight: 700,
-            fontSize: 22,
-            border: "none",
-            borderRadius: 20,
-            padding: "18px",
-            fontFamily: "'Piedra', cursive",
-            cursor: "pointer",
-            marginTop: 16,
-            boxShadow: "0 0 16px #FFD700"
-          }}
-        >
-          Send {amount} {token}
-        </button>
+            Send {amount || ""} {token}
+          </button>
+        </form>
+        {status && <div style={{ marginTop: 14, color: status.startsWith("Error") ? "red" : "#16ff72" }}>{status}</div>}
+        {txHash && (
+          <div style={{ marginTop: 8 }}>
+            <a
+              href={`https://sepolia.etherscan.io/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#FFC32B" }}
+            >
+              View on Etherscan
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

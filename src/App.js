@@ -1,49 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import WalletSigned from "./components/WalletSigned";
-import ChatsScreen from "./components/ChatsScreen";
-import GroupsScreen from "./components/GroupsScreen";
-import GroupChatScreen from "./components/GroupChatScreen";
 import SettingsScreen from "./components/SettingsScreen";
 import SendScreen from "./components/SendScreen";
+import SnapshotDAOs from "./components/SnapshotDAOs";
+import ChatsScreen from "./components/ChatsScreen";
+import { Client } from "@xmtp/xmtp-js";
+import { ethers } from "ethers";
 
-// Logo local desde /public/logo.png (más grande)
-const Logo = () => (
-  <img
-    src="/logo.png"
-    alt="logo"
-    style={{
-      width: 340,
-      marginBottom: 24,
-      borderRadius: 72,
-      background: "transparent",
-      display: "block"
-    }}
-  />
+// Icono de billetera para el menú
+const WalletIcon = ({ active }) => (
+  <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+    <rect x="7" y="12" width="24" height="14" rx="4" stroke="#FFC32B" strokeWidth="2.5" fill={active ? "#FFC32B22" : "none"}/>
+    <rect x="23" y="18" width="6" height="4" rx="2" fill="#FFC32B"/>
+    <circle cx="27" cy="20" r="1.7" fill="#181511"/>
+  </svg>
 );
 
 export default function App() {
   const [wallet, setWallet] = useState(null);
   const [signed, setSigned] = useState(false);
   const [activeMenu, setActiveMenu] = useState("chats");
-  const [openGroup, setOpenGroup] = useState(null);
+  const [xmtp, setXmtp] = useState(null);
+  const xmtpRef = useRef(null);
 
-  // Conexión y firma en Metamask
+  // Connect and sign with Metamask, store address in localStorage for session persistence
   const connectWallet = async () => {
     if (window.ethereum && window.ethereum.isMetaMask) {
       try {
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         if (accounts && accounts[0]) {
-          // Solicita firma para identificar
-          try {
-            const message = "Sign to enter RΞAXTIV. This proves wallet ownership.";
-            await window.ethereum.request({
-              method: "personal_sign",
-              params: [message, accounts[0]],
-            });
-            setWallet(accounts[0]);
-          } catch (signError) {
-            alert("You must sign the message in MetaMask to continue.");
-          }
+          setWallet(accounts[0]);
         }
       } catch (err) {
         alert("Connection rejected.");
@@ -53,14 +39,64 @@ export default function App() {
     }
   };
 
+  // Request signature on WalletSigned screen (after connect)
+  const signAndProceed = async (ethAddress) => {
+    try {
+      const message = "Sign to enter RΞAXTIV. This proves wallet ownership.";
+      await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, ethAddress],
+      });
+      setSigned(true);
+      localStorage.setItem("reaxtiv_myAddress", ethAddress);
+    } catch (signError) {
+      setSigned(false);
+      alert("You must sign the message in MetaMask to continue.");
+    }
+  };
+
+  // Initialize XMTP only once per session (don't ask for signature every menu change)
+  useEffect(() => {
+    const setupXmtp = async () => {
+      if (!wallet || !signed) {
+        setXmtp(null);
+        xmtpRef.current = null;
+        return;
+      }
+      if (xmtpRef.current) {
+        setXmtp(xmtpRef.current);
+        return;
+      }
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const _xmtp = await Client.create(signer, { env: "production" });
+        setXmtp(_xmtp);
+        xmtpRef.current = _xmtp;
+      } catch (err) {
+        setXmtp(null);
+        xmtpRef.current = null;
+      }
+    };
+    setupXmtp();
+  }, [wallet, signed]);
+
   const disconnect = () => {
     setWallet(null);
     setSigned(false);
-    setOpenGroup(null);
     setActiveMenu("chats");
+    setXmtp(null);
+    xmtpRef.current = null;
+    localStorage.removeItem("reaxtiv_myAddress");
   };
 
-  // Pantalla de bienvenida
+  // On mount, restore wallet from localStorage (if any)
+  useEffect(() => {
+    const addr = localStorage.getItem("reaxtiv_myAddress");
+    if (addr && !wallet) setWallet(addr);
+  }, [wallet]);
+
+  // Main UI
   if (!wallet) {
     return (
       <div
@@ -76,7 +112,15 @@ export default function App() {
         }}
       >
         <div style={{height: 34}}></div>
-        <Logo />
+        <img src="/logo.png" alt="logo"
+          style={{
+            width: 340,
+            marginBottom: 24,
+            borderRadius: 72,
+            background: "transparent",
+            display: "block"
+          }}
+        />
         <h1
           style={{
             fontFamily: "'Orbitron', sans-serif",
@@ -142,52 +186,42 @@ export default function App() {
     );
   }
 
-  // Pantalla de wallet firmada
   if (wallet && !signed) {
     return (
       <WalletSigned
         wallet={wallet}
-        onOk={() => setSigned(true)}
+        onOk={() => signAndProceed(wallet)}
         onDisconnect={disconnect}
       />
     );
   }
 
-  // Pantalla de chat grupal
-  if (openGroup) {
-    return (
-      <GroupChatScreen
-        group={openGroup}
-        onBack={() => setOpenGroup(null)}
-      />
-    );
-  }
-
-  // Navegación principal (después de login)
   return (
     <div
       style={{
         minHeight: "100vh",
-        width: "100vw",
+        width: "100%",
         background: "#000000",
         position: "relative",
+        overflowX: "hidden",
       }}
     >
-      <div style={{ width: "100%", minHeight: "calc(100vh - 110px)" }}>
-        {activeMenu === "chats" && (
-          <ChatsScreen onDisconnect={disconnect} />
-        )}
-        {activeMenu === "groups" && (
-          <GroupsScreen onOpenGroup={setOpenGroup} />
-        )}
-        {activeMenu === "settings" && (
-          <SettingsScreen onDisconnect={disconnect} />
-        )}
-        {activeMenu === "send" && (
-          <SendScreen />
-        )}
-      </div>
-      {/* Bottom nav */}
+      {activeMenu === "chats" && (
+        <ChatsScreen
+          xmtp={xmtp}
+          myAddress={wallet}
+          onDisconnect={disconnect}
+        />
+      )}
+      {activeMenu === "settings" && (
+        <SettingsScreen onDisconnect={disconnect} />
+      )}
+      {activeMenu === "wallet" && ( // <--- Cambiado de send a wallet
+        <SendScreen wallet={wallet} />
+      )}
+      {activeMenu === "daos" && (
+        <SnapshotDAOs />
+      )}
       <div
         style={{
           display: "flex",
@@ -218,39 +252,37 @@ export default function App() {
             Chats
           </div>
         </div>
-        <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("send")}>
-          {/* Icono de enviar */}
-          <svg width="38" height="38" viewBox="0 0 36 36" fill="none">
-            <polygon points="6,32 32,18 6,4 10,18" fill="none" stroke="#FFC32B" strokeWidth="2.5"/>
-          </svg>
+        <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("wallet")}>
+          <WalletIcon active={activeMenu === "wallet"} />
           <div style={{
             color: "#FFC32B",
             fontFamily: "'Piedra', cursive",
             fontSize: 22,
-            fontWeight: activeMenu === "send" ? 700 : 400,
+            fontWeight: activeMenu === "wallet" ? 700 : 400,
             marginTop: 3,
           }}>
-            Send
+            Wallet
           </div>
         </div>
-        <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("groups")}>
-          <svg width="38" height="38" viewBox="0 0 36 36" fill="none">
-            <circle cx="12" cy="16" r="5" stroke="#FFC32B" strokeWidth="2.5" fill="none"/>
-            <circle cx="26" cy="16" r="5" stroke="#FFC32B" strokeWidth="2.5" fill="none"/>
-            <ellipse cx="19" cy="27" rx="11" ry="6" stroke="#FFC32B" strokeWidth="2.5" fill="none"/>
+        <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("daos")}>
+          {/* El ícono de DAOs puede quedarse igual o con el nuevo de grupo, según tu preferencia */}
+          <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+            <circle cx="11" cy="18" r="5" stroke="#FFC32B" strokeWidth="2.5" fill={activeMenu === "daos" ? "#FFC32B22" : "none"} />
+            <circle cx="27" cy="18" r="5" stroke="#FFC32B" strokeWidth="2.5" fill={activeMenu === "daos" ? "#FFC32B22" : "none"} />
+            <ellipse cx="19" cy="28" rx="12" ry="7" stroke="#FFC32B" strokeWidth="2.5" fill="none" />
+            <circle cx="19" cy="13" r="6" stroke="#FFC32B" strokeWidth="2.5" fill={activeMenu === "daos" ? "#FFC32B22" : "none"} />
           </svg>
           <div style={{
             color: "#FFC32B",
             fontFamily: "'Piedra', cursive",
             fontSize: 22,
-            fontWeight: activeMenu === "groups" ? 700 : 400,
+            fontWeight: activeMenu === "daos" ? 700 : 400,
             marginTop: 3,
           }}>
-            Groups
+            DAOs
           </div>
         </div>
         <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("settings")}>
-          {/* Icono de llave inglesa */}
           <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
             <path
               d="M27.5 28.8l-4.4-4.4a6 6 0 0 1-8.7-7.6l2.4 2.4 2.2-2.2-2.4-2.4a6 6 0 0 1 7.6 8.7l4.4 4.4a2 2 0 1 1-1.1 1.1z"
