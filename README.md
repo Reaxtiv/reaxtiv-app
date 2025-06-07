@@ -31,4 +31,4 @@ If you use environment variables (.env), add them in the root directory of the p
 
 ## License
 
-Private. All rights reserved.
+Private. All rights reserved.Test deploy with correct email.
