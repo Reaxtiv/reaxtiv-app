@@ -1,56 +1,242 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
-// Usa el endpoint de tu API route en Vercel
-const SNAPSHOT_API = "/api/snapshot";
-
-async function fetchDaos(search = "") {
-  let filter = "";
-  if (search) {
-    filter = `where: { 
-      OR: [
-        { id_contains: "${search.toLowerCase()}" },
-        { name_contains: "${search}" }
-      ]
-    }`;
+// Static list of top 25 DAOs
+const POPULAR_DAOS = [
+  {
+    id: "uniswap.eth",
+    name: "Uniswap",
+    about: "UNI token holders govern the Uniswap Protocol.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png",
+    symbol: "UNI",
+    followersCount: 80000,
+    network: "1"
+  },
+  {
+    id: "aave.eth",
+    name: "Aave",
+    about: "Decentralized non-custodial liquidity protocol.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9/logo.png",
+    symbol: "AAVE",
+    followersCount: 55000,
+    network: "1"
+  },
+  {
+    id: "ens.eth",
+    name: "ENS DAO",
+    about: "Ethereum Name Service governance.",
+    avatar: "https://raw.githubusercontent.com/ensdomains/ens-avatar-service/main/public/ens.png",
+    symbol: "ENS",
+    followersCount: 46000,
+    network: "1"
+  },
+  {
+    id: "balancer.eth",
+    name: "Balancer",
+    about: "Balancer protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xba100000625a3754423978a60c9317c58a424e3D/logo.png",
+    symbol: "BAL",
+    followersCount: 25000,
+    network: "1"
+  },
+  {
+    id: "gitcoindao.eth",
+    name: "Gitcoin DAO",
+    about: "A community of builders funding digital public goods.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xDECAF9CD2367cdbb726E904cD6397eDFcAe6068D/logo.png",
+    symbol: "GTC",
+    followersCount: 21000,
+    network: "1"
+  },
+  {
+    id: "mkrgov.eth",
+    name: "MakerDAO",
+    about: "The Maker Protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2/logo.png",
+    symbol: "MKR",
+    followersCount: 31000,
+    network: "1"
+  },
+  {
+    id: "curve.eth",
+    name: "Curve DAO",
+    about: "Curve protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xD533a949740bb3306d119CC777fa900bA034cd52/logo.png",
+    symbol: "CRV",
+    followersCount: 27000,
+    network: "1"
+  },
+  {
+    id: "arbitrumfoundation.eth",
+    name: "Arbitrum DAO",
+    about: "Arbitrum One governance.",
+    avatar: "https://cryptologos.cc/logos/arbitrum-arb-logo.png",
+    symbol: "ARB",
+    followersCount: 59000,
+    network: "42161"
+  },
+  {
+    id: "opcollective.eth",
+    name: "Optimism Collective",
+    about: "Optimism governance.",
+    avatar: "https://cryptologos.cc/logos/optimism-ethereum-op-logo.png",
+    symbol: "OP",
+    followersCount: 43000,
+    network: "10"
+  },
+  {
+    id: "safe.eth",
+    name: "Safe DAO",
+    about: "Safe (previously Gnosis Safe) governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xd9cEeeD6e6b4B2e5C7569a7e65e65A2d8B7C689a/logo.png",
+    symbol: "SAFE",
+    followersCount: 9000,
+    network: "1"
+  },
+  {
+    id: "yam.eth",
+    name: "Yam Finance",
+    about: "Yam Finance governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x0AaCfbeC6a24756c20D41914F2caba817C0d8521/logo.png",
+    symbol: "YAM",
+    followersCount: 8000,
+    network: "1"
+  },
+  {
+    id: "yearn.eth",
+    name: "Yearn Finance",
+    about: "Yearn protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e/logo.png",
+    symbol: "YFI",
+    followersCount: 15000,
+    network: "1"
+  },
+  {
+    id: "compound-finance.eth",
+    name: "Compound",
+    about: "Compound protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xc00e94Cb662C3520282E6f5717214004A7f26888/logo.png",
+    symbol: "COMP",
+    followersCount: 12000,
+    network: "1"
+  },
+  {
+    id: "index-coop.eth",
+    name: "Index Coop",
+    about: "Index Coop governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x0954906da0Bf32d5479e25f46056d22f08464cab/logo.png",
+    symbol: "INDEX",
+    followersCount: 9000,
+    network: "1"
+  },
+  {
+    id: "sushigov.eth",
+    name: "Sushi DAO",
+    about: "Sushi protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B3595068778DD592e39A122f4f5a5Cf09C90fE2/logo.png",
+    symbol: "SUSHI",
+    followersCount: 18000,
+    network: "1"
+  },
+  {
+    id: "tornado-governance.eth",
+    name: "Tornado Cash",
+    about: "Tornado Cash protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x77777feddddffc19ff86db637967013e6c6a116c/logo.png",
+    symbol: "TORN",
+    followersCount: 8000,
+    network: "1"
+  },
+  {
+    id: "pooltogether.eth",
+    name: "PoolTogether",
+    about: "PoolTogether protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x0cec1a9154ff802e7934fc916ed7ca50bde6844e/logo.png",
+    symbol: "POOL",
+    followersCount: 11000,
+    network: "1"
+  },
+  {
+    id: "banklessvault.eth",
+    name: "Bankless DAO",
+    about: "A decentralized community for bankless money systems.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2d94AA3e47d9D5024503Ca8491fcE9A2fB4DA198/logo.png",
+    symbol: "BANK",
+    followersCount: 13000,
+    network: "1"
+  },
+  {
+    id: "piedao.eth",
+    name: "PieDAO",
+    about: "PieDAO protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xFeeAa4A2D0B068Ce4788e9a6b0e2eC5B2b1B3C0a/logo.png",
+    symbol: "PIE",
+    followersCount: 7000,
+    network: "1"
+  },
+  {
+    id: "badgerdao.eth",
+    name: "Badger DAO",
+    about: "Badger DAO protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x3472A5A71965499acd81997a54BBA8D852C6E53d/logo.png",
+    symbol: "BADGER",
+    followersCount: 9000,
+    network: "1"
+  },
+  {
+    id: "gnosisdao.eth",
+    name: "GnosisDAO",
+    about: "GnosisDAO stewards the development of Gnosis products.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6810e776880c02933d47db1b9fc05908e5386b96/logo.png",
+    symbol: "GNO",
+    followersCount: 9000,
+    network: "1"
+  },
+  {
+    id: "metagov.eth",
+    name: "MetaCartel",
+    about: "Grants DAO funding Ethereum ecosystem projects.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xB4a77938a399a27F0bB6C90a3D97b0a88bE4e9f4/logo.png",
+    symbol: "META",
+    followersCount: 7200,
+    network: "1"
+  },
+  {
+    id: "stakedao.eth",
+    name: "Stake DAO",
+    about: "Stake DAO protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x0F2D719407FdBeFF09D87557AbB7232601FD9F29/logo.png",
+    symbol: "SDT",
+    followersCount: 6800,
+    network: "1"
+  },
+  {
+    id: "rarible.eth",
+    name: "Rarible DAO",
+    about: "Rarible protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xfca59cd816ab1ead66534d82bc21e7515ce441cf/logo.png",
+    symbol: "RARI",
+    followersCount: 8200,
+    network: "1"
+  },
+  {
+    id: "defidollar.eth",
+    name: "DeFi Dollar DAO",
+    about: "DeFi Dollar protocol governance.",
+    avatar: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x3a880652f47bfaa771908c07dd8673a787daed3a/logo.png",
+    symbol: "DUSD",
+    followersCount: 6000,
+    network: "1"
   }
-  return fetch(SNAPSHOT_API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "accept": "application/json"
-    },
-    body: JSON.stringify({
-      query: `
-        query {
-          spaces(
-            first: 20
-            skip: 0
-            orderBy: "followersCount"
-            orderDirection: desc
-            ${filter}
-          ) {
-            id
-            name
-            about
-            avatar
-            symbol
-            followersCount
-            network
-          }
-        }
-      `
-    })
-  })
-    .then(res => res.json())
-    .then(res => (res?.data?.spaces || []).filter(d => d.followersCount && d.followersCount > 1000));
-}
+];
+
+const SNAPSHOT_API = "https://hub.snapshot.org/graphql";
 
 async function fetchProposals(space) {
   const res = await fetch(SNAPSHOT_API, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "accept": "application/json"
+      accept: "application/json"
     },
     body: JSON.stringify({
       query: `
@@ -68,8 +254,6 @@ async function fetchProposals(space) {
             start
             end
             state
-            choices
-            scores
             created
           }
         }
@@ -78,55 +262,32 @@ async function fetchProposals(space) {
     })
   });
   const json = await res.json();
+  if (json.errors) {
+    console.error("Snapshot error:", json.errors);
+    return [];
+  }
   return json?.data?.proposals || [];
 }
 
 export default function SnapshotDAOs() {
-  const [daos, setDaos] = useState([]);
   const [search, setSearch] = useState("");
-  const [error, setError] = useState("");
-  const [apiError, setApiError] = useState("");
-  const [loadingDaos, setLoadingDaos] = useState(true);
-
+  const [filteredDaos, setFilteredDaos] = useState(POPULAR_DAOS);
   const [proposals, setProposals] = useState({});
   const [loadingProps, setLoadingProps] = useState({});
 
-  useEffect(() => {
-    setLoadingDaos(true);
-    setApiError("");
-    fetchDaos()
-      .then(spaces => {
-        setDaos(spaces);
-        setLoadingDaos(false);
-        if (!spaces.length) setApiError("No DAOs found on Snapshot.");
-      })
-      .catch((e) => {
-        setDaos([]);
-        setApiError("Error connecting to the Snapshot API: " + e.message);
-        setLoadingDaos(false);
-      });
-  }, []);
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setError("");
-    setApiError("");
-    setLoadingDaos(true);
-
-    const q = search.trim();
-    if (!q) {
-      fetchDaos().then(spaces => {
-        setDaos(spaces);
-        setLoadingDaos(false);
-        if (!spaces.length) setApiError("No DAOs found on Snapshot.");
-      });
+  // Filter by name (case-insensitive, substring)
+  const handleSearch = (e) => {
+    const q = e.target.value;
+    setSearch(q);
+    if (!q.trim()) {
+      setFilteredDaos(POPULAR_DAOS);
       return;
     }
-
-    const spaces = await fetchDaos(q);
-    setDaos(spaces);
-    setLoadingDaos(false);
-    if (!spaces.length) setError("No DAOs found for this search.");
+    setFilteredDaos(
+      POPULAR_DAOS.filter(
+        d => d.name.toLowerCase().includes(q.trim().toLowerCase())
+      )
+    );
   };
 
   const handleShowProposals = async (dao) => {
@@ -173,14 +334,14 @@ export default function SnapshotDAOs() {
         boxShadow: "0 2px 8px #000a"
       }}>
         <form
-          onSubmit={handleSearch}
+          onSubmit={e => e.preventDefault()}
           style={{ display: "flex", alignItems: "center", width: "100%" }}
         >
           <input
             type="text"
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search DAO by name, id or symbol..."
+            onChange={handleSearch}
+            placeholder="Search DAO by name..."
             style={{
               width: 240,
               padding: "10px 16px",
@@ -192,36 +353,15 @@ export default function SnapshotDAOs() {
               fontFamily: "'Piedra', cursive"
             }}
           />
-          <button
-            type="submit"
-            style={{
-              marginLeft: 18,
-              padding: "10px 30px",
-              borderRadius: 12,
-              border: "none",
-              background: "#FFC32B",
-              color: "#181511",
-              fontWeight: 700,
-              fontSize: 18,
-              fontFamily: "'Piedra', cursive",
-              cursor: "pointer"
-            }}
-          >
-            Search
-          </button>
         </form>
       </div>
-      {loadingDaos && (
-        <div style={{ color: "#FFD700", fontSize: 18 }}>Loading DAOs...</div>
-      )}
-      {apiError && (
-        <div style={{ color: "red", fontSize: 18 }}>{apiError}</div>
-      )}
-      {error && (
-        <div style={{ color: "red", fontSize: 18 }}>{error}</div>
+      {filteredDaos.length === 0 && (
+        <div style={{ color: "red", fontSize: 18, marginBottom: 14 }}>
+          No DAOs found.
+        </div>
       )}
       <ul style={{ padding: 0, margin: 0, listStyle: "none", width: "100%" }}>
-        {daos.map((dao) => (
+        {filteredDaos.map((dao) => (
           <li key={dao.id} style={{
             marginBottom: 18,
             background: "#232323",
@@ -245,11 +385,7 @@ export default function SnapshotDAOs() {
                 title="Open on Snapshot"
               >
                 {dao.avatar && (
-                  <img src={
-                    dao.avatar.startsWith("ipfs://")
-                      ? `https://ipfs.io/ipfs/${dao.avatar.replace("ipfs://", "")}`
-                      : dao.avatar
-                  } alt={dao.name} style={{
+                  <img src={dao.avatar} alt={dao.name} style={{
                     width: 48, height: 48, borderRadius: 24, background: "#fff", marginRight: 10
                   }} onError={e => { e.target.style.display = 'none'; }} />
                 )}
@@ -293,23 +429,64 @@ export default function SnapshotDAOs() {
             {/* Proposals */}
             {proposals[dao.id] && (
               <div style={{ marginTop: 16, width: "100%" }}>
-                <div style={{ fontSize: 17, fontWeight: 700, color: "#FFD700", marginBottom: 4 }}>
+                <div style={{
+                  fontSize: 17,
+                  fontWeight: 700,
+                  color: "#FFD700",
+                  marginBottom: 4
+                }}>
                   Proposals:
                 </div>
                 <ul style={{ paddingLeft: 18 }}>
                   {proposals[dao.id].length === 0 && (
-                    <li style={{ color: "#fff" }}>No recent proposals.</li>
+                    <li style={{ color: "#fff", fontWeight: 400, fontFamily: "inherit", letterSpacing: 0 }}>
+                      No recent proposals.
+                    </li>
                   )}
                   {proposals[dao.id].map((p) => (
                     <li key={p.id} style={{ color: "#fff", marginBottom: 8 }}>
-                      <span style={{ fontWeight: 700 }}>{p.title}</span>
+                      <a
+                        href={`https://snapshot.org/#/${dao.id}/proposal/${p.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontWeight: 400,
+                          fontSize: 16,
+                          color: "#FFC32B",
+                          textDecoration: "underline",
+                          fontFamily: "inherit",
+                          letterSpacing: 0.1,
+                          lineHeight: 1.3,
+                          display: "inline-block"
+                        }}
+                        title="Go to voting page"
+                      >
+                        {p.title}
+                      </a>
                       <span style={{ fontSize: 13, color: "#FFC32B", marginLeft: 6 }}>
                         [{p.state}]
                       </span>
-                      <div style={{ fontSize: 13, color: "#FFD700" }}>
+                      <div style={{
+                        fontSize: 13,
+                        color: "#FFD700",
+                        fontWeight: 400,
+                        fontFamily: "inherit",
+                        letterSpacing: 0,
+                        lineHeight: 1.2
+                      }}>
                         Start: {new Date(p.start * 1000).toLocaleString()} | End: {new Date(p.end * 1000).toLocaleString()}
                       </div>
-                      <div style={{ color: "#BBB", fontSize: 13, maxWidth: 350, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                      <div style={{
+                        color: "#BBB",
+                        fontSize: 13,
+                        maxWidth: 350,
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                        fontWeight: 400,
+                        fontFamily: "inherit",
+                        letterSpacing: 0
+                      }}>
                         {p.body}
                       </div>
                     </li>
