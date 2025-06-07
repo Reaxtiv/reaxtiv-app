@@ -1,13 +1,19 @@
 # Reaxtiv App
-
-React application to interact with XMTP, Ethereum, and Snapshot.
+RΞAXTIV is a modern React application that brings together essential Web3 tools into a single, user-friendly interface. With Reaxtiv, you can send and receive encrypted messages using XMTP, check Ethereum wallet balances, transfer ETH, USDT, and DAI, and participate in DAO governance through Snapshot—all in one place.
 
 ## Features
 
-- Send and receive messages with XMTP.
-- Check the ETH balance of any wallet.
-- Send ETH to any address.
-- Integration with Snapshot and other Web3 tools.
+ **XMTP Messaging**
+  - Send and receive secure, decentralized messages with any XMTP-enabled wallet.
+- **Ethereum & ERC-20 Tools**
+  - Check the ETH, USDT, and DAI balance of any wallet address.
+  - Send ETH, USDT, and DAI securely to any Ethereum address.
+- **Snapshot DAO Integration**
+  - Browse a curated list of top DAOs.
+  - View and filter recent proposals for each DAO.
+  - Direct links to vote on proposals via Snapshot.
+- **MetaMask Integration**
+  - Connect your MetaMask wallet to sign messages, send transactions, and interact with DAOs.
 
 ## Installation
 
