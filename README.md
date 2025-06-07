@@ -14,7 +14,7 @@ RΞAXTIV is a modern React application that brings together essential Web3 tools
   - Direct links to vote on proposals via Snapshot.
 - **MetaMask Integration**
   - Connect your MetaMask wallet to sign messages, send transactions, and interact with DAOs.
-
+  [![Demo Video](https://img.youtube.com/vi/nY59PlghBvY/0.jpg)](https://youtu.be/nY59PlghBvY)
 ## Installation
 
 ```bash
