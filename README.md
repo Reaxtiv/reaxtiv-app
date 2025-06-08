@@ -1,6 +1,6 @@
 # Reaxtiv App
 RΞAXTIV is a modern React application that brings together essential Web3 tools into a single, user-friendly interface. With Reaxtiv, you can send and receive encrypted messages using XMTP, check Ethereum wallet balances, transfer ETH, USDT, and DAI, and participate in DAO governance through Snapshot—all in one place.
-
+https://reaxtiv-app.vercel.app/
 ## Features
 
  **XMTP Messaging**
