@@ -274,6 +274,7 @@ export default function SnapshotDAOs() {
   const [filteredDaos, setFilteredDaos] = useState(POPULAR_DAOS);
   const [proposals, setProposals] = useState({});
   const [loadingProps, setLoadingProps] = useState({});
+  const [openDaos, setOpenDaos] = useState({});
 
   // Filter by name (case-insensitive, substring)
   const handleSearch = (e) => {
@@ -290,16 +291,23 @@ export default function SnapshotDAOs() {
     );
   };
 
+  // Toggle proposals display and fetch if needed
   const handleShowProposals = async (dao) => {
-    setLoadingProps(l => ({ ...l, [dao.id]: true }));
-    try {
-      const props = await fetchProposals(dao.id);
-      setProposals(p => ({ ...p, [dao.id]: props }));
-    } catch (e) {
-      setProposals(p => ({ ...p, [dao.id]: [] }));
+    setOpenDaos(o => ({ ...o, [dao.id]: !o[dao.id] }));
+    if (!proposals[dao.id] && !openDaos[dao.id]) {
+      setLoadingProps(l => ({ ...l, [dao.id]: true }));
+      try {
+        const props = await fetchProposals(dao.id);
+        setProposals(p => ({ ...p, [dao.id]: props }));
+      } catch (e) {
+        setProposals(p => ({ ...p, [dao.id]: [] }));
+      }
+      setLoadingProps(l => ({ ...l, [dao.id]: false }));
     }
-    setLoadingProps(l => ({ ...l, [dao.id]: false }));
   };
+
+  // Helper to truncate proposal body
+  const truncate = (str, n) => (str && str.length > n ? str.slice(0, n) + "..." : str);
 
   return (
     <div style={{
@@ -352,6 +360,7 @@ export default function SnapshotDAOs() {
               color: "#FFC32B",
               fontFamily: "'Piedra', cursive"
             }}
+            aria-label="Search DAO by name"
           />
         </form>
       </div>
@@ -383,6 +392,7 @@ export default function SnapshotDAOs() {
                 rel="noopener noreferrer"
                 style={{ display: "flex", alignItems: "center" }}
                 title="Open on Snapshot"
+                aria-label={`Open ${dao.name} on Snapshot`}
               >
                 {dao.avatar && (
                   <img src={dao.avatar} alt={dao.name} style={{
@@ -397,6 +407,7 @@ export default function SnapshotDAOs() {
                   rel="noopener noreferrer"
                   style={{ color: "#FFC32B", fontWeight: 700, fontSize: 22, textDecoration: "underline" }}
                   title="Open on Snapshot"
+                  aria-label={`Open ${dao.name} on Snapshot`}
                 >
                   {dao.name}
                 </a>
@@ -420,14 +431,19 @@ export default function SnapshotDAOs() {
                       border: "none",
                       cursor: "pointer"
                     }}
+                    aria-label={openDaos[dao.id] ? "Hide proposals" : "View proposals"}
                   >
-                    {loadingProps[dao.id] ? "Loading..." : "View proposals"}
+                    {loadingProps[dao.id]
+                      ? "Loading..."
+                      : openDaos[dao.id]
+                        ? "Hide proposals"
+                        : "View proposals"}
                   </button>
                 </div>
               </div>
             </div>
             {/* Proposals */}
-            {proposals[dao.id] && (
+            {openDaos[dao.id] && (
               <div style={{ marginTop: 16, width: "100%" }}>
                 <div style={{
                   fontSize: 17,
@@ -438,12 +454,12 @@ export default function SnapshotDAOs() {
                   Proposals:
                 </div>
                 <ul style={{ paddingLeft: 18 }}>
-                  {proposals[dao.id].length === 0 && (
+                  {proposals[dao.id] && proposals[dao.id].length === 0 && !loadingProps[dao.id] && (
                     <li style={{ color: "#fff", fontWeight: 400, fontFamily: "inherit", letterSpacing: 0 }}>
                       No recent proposals.
                     </li>
                   )}
-                  {proposals[dao.id].map((p) => (
+                  {proposals[dao.id] && proposals[dao.id].map((p) => (
                     <li key={p.id} style={{ color: "#fff", marginBottom: 8 }}>
                       <a
                         href={`https://snapshot.org/#/${dao.id}/proposal/${p.id}`}
@@ -460,6 +476,7 @@ export default function SnapshotDAOs() {
                           display: "inline-block"
                         }}
                         title="Go to voting page"
+                        aria-label={`Go to proposal ${p.title}`}
                       >
                         {p.title}
                       </a>
@@ -487,10 +504,13 @@ export default function SnapshotDAOs() {
                         fontFamily: "inherit",
                         letterSpacing: 0
                       }}>
-                        {p.body}
+                        {truncate(p.body, 120)}
                       </div>
                     </li>
                   ))}
+                  {loadingProps[dao.id] && (
+                    <li style={{ color: "#fff" }}>Loading proposals...</li>
+                  )}
                 </ul>
               </div>
             )}
