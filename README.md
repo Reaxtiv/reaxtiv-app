@@ -28,6 +28,7 @@ npm install
 ```
 
 ## Usage
+https://reaxtiv-app.vercel.app/
 
 ```bash
 npm start
