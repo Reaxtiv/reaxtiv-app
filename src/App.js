@@ -6,6 +6,10 @@ import SnapshotDAOs from "./components/SnapshotDAOs";
 import ChatsScreen from "./components/ChatsScreen";
 import { Client } from "@xmtp/xmtp-js";
 import { ethers } from "ethers";
+import { AiOutlineMessage } from "react-icons/ai";
+import { FaWallet } from "react-icons/fa";
+import { RiCommunityLine } from "react-icons/ri";
+import { FiSettings } from "react-icons/fi";
 
 // Icono de billetera para el menú
 const WalletIcon = ({ active }) => (
@@ -238,10 +242,7 @@ export default function App() {
         }}
       >
         <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("chats")}>
-          <svg width="38" height="38" viewBox="0 0 36 36" fill="none">
-            <rect x="5" y="8" width="26" height="16" rx="6" stroke="#FFC32B" strokeWidth="2.5" />
-            <path d="M10 24 L8 30 L16 24" stroke="#FFC32B" strokeWidth="2.5" fill="none"/>
-          </svg>
+          <AiOutlineMessage size={38} color={activeMenu === "chats" ? "#FFD700" : "#FFC32B"} />
           <div style={{
             color: "#FFC32B",
             fontFamily: "'Piedra', cursive",
@@ -253,7 +254,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("wallet")}>
-          <WalletIcon active={activeMenu === "wallet"} />
+          <FaWallet size={38} color={activeMenu === "wallet" ? "#FFD700" : "#FFC32B"} />
           <div style={{
             color: "#FFC32B",
             fontFamily: "'Piedra', cursive",
@@ -265,13 +266,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("daos")}>
-          {/* El ícono de DAOs puede quedarse igual o con el nuevo de grupo, según tu preferencia */}
-          <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-            <circle cx="11" cy="18" r="5" stroke="#FFC32B" strokeWidth="2.5" fill={activeMenu === "daos" ? "#FFC32B22" : "none"} />
-            <circle cx="27" cy="18" r="5" stroke="#FFC32B" strokeWidth="2.5" fill={activeMenu === "daos" ? "#FFC32B22" : "none"} />
-            <ellipse cx="19" cy="28" rx="12" ry="7" stroke="#FFC32B" strokeWidth="2.5" fill="none" />
-            <circle cx="19" cy="13" r="6" stroke="#FFC32B" strokeWidth="2.5" fill={activeMenu === "daos" ? "#FFC32B22" : "none"} />
-          </svg>
+          <RiCommunityLine size={38} color={activeMenu === "daos" ? "#FFD700" : "#FFC32B"} />
           <div style={{
             color: "#FFC32B",
             fontFamily: "'Piedra', cursive",
@@ -283,13 +278,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ textAlign: "center", cursor: "pointer" }} onClick={() => setActiveMenu("settings")}>
-          <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-            <path
-              d="M27.5 28.8l-4.4-4.4a6 6 0 0 1-8.7-7.6l2.4 2.4 2.2-2.2-2.4-2.4a6 6 0 0 1 7.6 8.7l4.4 4.4a2 2 0 1 1-1.1 1.1z"
-              stroke="#FFC32B" strokeWidth="2.5" fill="none"
-            />
-            <circle cx="17" cy="21" r="2.6" stroke="#FFC32B" strokeWidth="2.5" fill="none"/>
-          </svg>
+          <FiSettings size={38} color={activeMenu === "settings" ? "#FFD700" : "#FFC32B"} />
           <div style={{
             color: "#FFC32B",
             fontFamily: "'Piedra', cursive",
