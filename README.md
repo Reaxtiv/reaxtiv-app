@@ -5,15 +5,19 @@ https://reaxtiv-app.vercel.app/
 
  -XMTP Messaging
   - Send and receive secure, decentralized messages with any XMTP-enabled wallet.
-- **Ethereum & ERC-20 Tools**
+   
+- Ethereum & ERC-20 Tools
   - Check the ETH, USDT, and DAI balance of any wallet address.
   - Send ETH, USDT, and DAI securely to any Ethereum address.
-- **Snapshot DAO Integration**
+    
+- Snapshot DAO Integration
   - Browse a curated list of top DAOs.
   - View and filter recent proposals for each DAO.
   - Direct links to vote on proposals via Snapshot.
-- **MetaMask Integration**
+   
+- MetaMask Integration
   - Connect your MetaMask wallet to sign messages, send transactions, and interact with DAOs.
+  - 
   [![Demo Video](https://img.youtube.com/vi/nY59PlghBvY/0.jpg)](https://youtu.be/nY59PlghBvY)
 ## Installation
 
