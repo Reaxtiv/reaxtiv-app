@@ -3,7 +3,7 @@ RΞAXTIV is a modern React application that brings together essential Web3 tools
 https://reaxtiv-app.vercel.app/
 ## Features
 
- -XMTP Messaging
+  -XMTP Messaging
   - Send and receive secure, decentralized messages with any XMTP-enabled wallet.
    
 - Ethereum & ERC-20 Tools
