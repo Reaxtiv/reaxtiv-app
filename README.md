@@ -69,14 +69,6 @@ Browse a curated list of leading DAOs, view and filter recent proposals for each
 
 ---
 
-## 🖼️ Screenshots
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Reaxtiv/reaxtiv-app/main/public/screenshot2.png" width="350" alt="Wallets">
-  <img src="https://raw.githubusercontent.com/Reaxtiv/reaxtiv-app/main/public/screenshot3.png" width="350" alt="DAO Proposals">
-</p>
-
----
 
 ## 🛠️ Installation
 
