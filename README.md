@@ -35,7 +35,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 If you use environment variables (.env), add them in the root directory of the project.
 
-## License
 
 ## License
 
