@@ -37,4 +37,6 @@ If you use environment variables (.env), add them in the root directory of the p
 
 ## License
 
-Private. All rights reserved.Test deploy with correct email.
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
