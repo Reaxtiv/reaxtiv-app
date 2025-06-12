@@ -10,6 +10,17 @@ function shortAddress(addr) {
   return addr.slice(0, 6) + "..." + addr.slice(-4);
 }
 
+// Función para obtener la URL del explorer según la red
+function getExplorerUrl(chainId, txHash) {
+  if (chainId === 1) return `https://etherscan.io/tx/${txHash}`;
+  if (chainId === 5) return `https://goerli.etherscan.io/tx/${txHash}`;
+  if (chainId === 8453) return `https://basescan.org/tx/${txHash}`;
+  if (chainId === 84532) return `https://goerli.basescan.org/tx/${txHash}`;
+  if (chainId === 11155111) return `https://sepolia.etherscan.io/tx/${txHash}`;
+  // Puedes agregar más redes aquí
+  return `https://etherscan.io/tx/${txHash}`;
+}
+
 export default function SendScreen({ wallet }) {
   const [amount, setAmount] = useState("");
   const [to, setTo] = useState("");
@@ -26,6 +37,9 @@ export default function SendScreen({ wallet }) {
     ETH: "/eth.png",
     DAI: "/dai.png"
   };
+
+  // Obtener chainId de la wallet y asegurarse que es número
+  const chainId = Number(wallet?.provider?.network?.chainId || wallet?.chainId || 1);
 
   useEffect(() => {
     if (!wallet) {
@@ -92,7 +106,7 @@ export default function SendScreen({ wallet }) {
       <div style={{
         position: "absolute",
         left: 36,
-        top: 40, // Bajamos la marca y Wallet
+        top: 40,
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-start",
@@ -134,7 +148,7 @@ export default function SendScreen({ wallet }) {
         boxShadow: "0 0 24px #18151177",
         padding: "42px 30px 38px 30px",
         marginBottom: 24,
-        marginTop: 200, // Más margen para que no se superponga jamás
+        marginTop: 200,
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-start"
@@ -199,7 +213,7 @@ export default function SendScreen({ wallet }) {
         boxShadow: "0 0 24px #18151177",
         padding: "32px 20px 28px 20px",
         marginBottom: 24,
-        marginTop: 200, // Misma altura que el recuadro de wallet
+        marginTop: 200,
       }}>
         <form onSubmit={handleSend}>
           <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
@@ -290,12 +304,12 @@ export default function SendScreen({ wallet }) {
         {txHash && (
           <div style={{ marginTop: 8 }}>
             <a
-              href={`https://sepolia.etherscan.io/tx/${txHash}`}
+              href={getExplorerUrl(chainId, txHash)}
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "#FFC32B" }}
             >
-              View on Etherscan
+              View on Explorer
             </a>
           </div>
         )}

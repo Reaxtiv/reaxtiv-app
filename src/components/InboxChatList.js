@@ -1,3 +1,4 @@
+// filepath: [InboxChatList.js](http://_vscodecontentref_/1)
 import React, { useEffect, useState } from "react";
 
 // Recorta dirección: 0x1234...abcd
@@ -183,6 +184,24 @@ export default function InboxChatList({
           </div>
         )}
       </div>
+      {/* Botón para chatear con el bot, debajo de la lista de direcciones */}
+      <button
+        onClick={() => onSelectConversation("bot.eth")}
+        style={{
+          width: "100%",
+          margin: "16px 0 0 0",
+          padding: "12px 0",
+          background: "#FFC32B",
+          color: "#181511",
+          border: "none",
+          borderRadius: 12,
+          fontWeight: 700,
+          fontSize: 18,
+          cursor: "pointer",
+        }}
+      >
+        🤖 Chat with Bot
+      </button>
     </div>
   );
 }

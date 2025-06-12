@@ -8,6 +8,7 @@ import SnapshotDAOs from "./SnapshotDAOs";
 const logoBgColor = "#000000";
 function shortEth(address) {
   if (!address) return "";
+  if (address.toLowerCase() === "bot.eth") return "Bot";
   return address.slice(0, 6) + "..." + address.slice(-4);
 }
 
@@ -159,43 +160,76 @@ export default function ChatsScreen({ myAddress, xmtp, onDisconnect }) {
                   borderRadius: 10,
                   color: selectedPeer === conv.peerAddress ? "#181511" : "#FFC32B",
                   border: selectedPeer === conv.peerAddress ? "2px solid #FFC32B" : "none",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center"
                 }}
               >
-                <div style={{ fontWeight: 700 }}>
-                  {shortEth(conv.peerAddress)}
-                  {isNewMsg(conv) && (
-                    <span style={{
-                      color: "#FFD700",
-                      marginLeft: 7,
-                      fontWeight: 900,
-                      fontSize: 19,
-                      verticalAlign: "middle"
-                    }}>•</span>
-                  )}
-                </div>
-                <div style={{
-                  fontSize: 14,
-                  color: selectedPeer === conv.peerAddress ? "#181511" : "#FFC32B",
-                  marginBottom: 4,
-                }}>
-                  {conv.lastMsg}
-                </div>
-                <div style={{
-                  fontSize: 12,
-                  color: "#FFD700",
-                  letterSpacing: 0.5,
-                  marginTop: 2,
-                }}>
-                  {conv.lastTime
-                    ? new Date(conv.lastTime).toLocaleString()
-                    : ""}
+                <img
+                  src={`https://api.dicebear.com/7.x/open-peeps/svg?seed=${encodeURIComponent(conv.peerAddress)}`}
+                  alt="avatar"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    marginRight: 12,
+                    background: "#fff"
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700 }}>
+                    {shortEth(conv.peerAddress)}
+                    {isNewMsg(conv) && (
+                      <span style={{
+                        color: "#FFD700",
+                        marginLeft: 7,
+                        fontWeight: 900,
+                        fontSize: 19,
+                        verticalAlign: "middle"
+                      }}>•</span>
+                    )}
+                  </div>
+                  <div style={{
+                    fontSize: 14,
+                    color: selectedPeer === conv.peerAddress ? "#181511" : "#FFC32B",
+                    marginBottom: 4,
+                  }}>
+                    {conv.lastMsg}
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: "#FFD700",
+                    letterSpacing: 0.5,
+                    marginTop: 2,
+                  }}>
+                    {conv.lastTime
+                      ? new Date(conv.lastTime).toLocaleString()
+                      : ""}
+                  </div>
                 </div>
               </div>
             ))}
             {filtered.length === 0 && (
               <div style={{ color: "#aaa", marginTop: 16 }}>No conversations yet.</div>
             )}
+            {/* Botón para chatear con el bot */}
+            <button
+              onClick={() => handleSelectInbox("bot.eth")}
+              style={{
+                width: "100%",
+                margin: "16px 0 0 0",
+                padding: "12px 0",
+                background: "#FFC32B",
+                color: "#181511",
+                border: "none",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 18,
+                cursor: "pointer",
+              }}
+            >
+              🤖 Chat with Bot
+            </button>
           </div>
           {/* Buscador */}
           <div
