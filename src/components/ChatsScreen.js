@@ -1,9 +1,84 @@
 import React, { useState, useEffect } from "react";
 import XmtpChat from "./XmtpChat";
-import { MdChat, MdSend, MdGroups } from "react-icons/md";
+import { MdChat, MdGroups } from "react-icons/md";
 import { FaCog } from "react-icons/fa";
 import SettingsScreen from "./SettingsScreen";
 import SnapshotDAOs from "./SnapshotDAOs";
+
+// --- Soporte ENS (.eth y .base.eth) con ethers v6 y Alchemy ---
+import { JsonRpcProvider, namehash, Contract } from "ethers";
+// --- Basenames integration (Base Name Service) ---
+import { getDefaultProvider } from "ethers";
+import { BASE_BNS_REGISTRY, BASE_BNS_RESOLVER_ABI } from "./basenamesConfig";
+
+const ETHEREUM_RPC = "https://eth-mainnet.g.alchemy.com/v2/fHvQNGDzVjsrx8WYqlPTi";
+const BASE_RPC = "https://base-mainnet.g.alchemy.com/v2/AUQI9wiuI0QXQTjpzPlfU";
+const ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
+
+const ENS_REGISTRY_ABI = [
+  "function resolver(bytes32 node) view returns (address)"
+];
+const ENS_RESOLVER_ABI = [
+  "function addr(bytes32 node) view returns (address)"
+];
+
+// -------- Basenames Resolver ---------
+/**
+ * resolveBasename: resolves a .base name using Base Name Service contract
+ * @param {string} name - e.g., "user.base"
+ * @returns {Promise<string|null>} address or null if not found
+ */
+async function resolveBasename(name) {
+  if (!name.endsWith(".base")) return null;
+  try {
+    // Use Base mainnet (could be testnet if needed)
+    const provider = new JsonRpcProvider(BASE_RPC);
+    // Compute the namehash for the .base name
+    // If using a specific BNS library, replace with its namehash if needed
+    const node = namehash(name);
+    const registry = new Contract(BASE_BNS_REGISTRY, ENS_REGISTRY_ABI, provider);
+    const resolverAddress = await registry.resolver(node);
+    if (!resolverAddress || resolverAddress === "0x0000000000000000000000000000000000000000") {
+      return null;
+    }
+    const resolver = new Contract(resolverAddress, BASE_BNS_RESOLVER_ABI, provider);
+    const address = await resolver.addr(node);
+    return address;
+  } catch (e) {
+    console.error("Basename error:", e);
+    return null;
+  }
+}
+// --------- ENS + Basenames unified resolver ---------
+async function resolveAnyName(name) {
+  // .base (Basenames) priority
+  if (name.endsWith(".base")) {
+    const address = await resolveBasename(name);
+    if (address && address !== "0x0000000000000000000000000000000000000000") return address;
+  }
+  // .base.eth or .eth (ENS)
+  if (name.endsWith(".base.eth") || name.endsWith(".eth")) {
+    let provider;
+    if (name.endsWith(".base.eth")) provider = new JsonRpcProvider(BASE_RPC);
+    else provider = new JsonRpcProvider(ETHEREUM_RPC);
+    try {
+      const node = namehash(name);
+      const registry = new Contract(ENS_REGISTRY_ADDRESS, ENS_REGISTRY_ABI, provider);
+      const resolverAddress = await registry.resolver(node);
+      if (!resolverAddress || resolverAddress === "0x0000000000000000000000000000000000000000") {
+        return null;
+      }
+      const resolver = new Contract(resolverAddress, ENS_RESOLVER_ABI, provider);
+      const address = await resolver.addr(node);
+      return address;
+    } catch (e) {
+      console.error("ENS error:", e);
+      return null;
+    }
+  }
+  return null;
+}
+// ------------------------------------------------------------
 
 const logoBgColor = "#000000";
 function shortEth(address) {
@@ -17,6 +92,7 @@ export default function ChatsScreen({ myAddress, xmtp, onDisconnect }) {
   const [activeMenu, setActiveMenu] = useState('chats');
   const [selectedPeer, setSelectedPeer] = useState(null);
   const [conversations, setConversations] = useState([]);
+  const [loadingRes, setLoadingRes] = useState(false);
 
   // Load inbox from localStorage and sync with XMTP
   useEffect(() => {
@@ -69,11 +145,36 @@ export default function ChatsScreen({ myAddress, xmtp, onDisconnect }) {
     ? conversations.filter(c => c.peerAddress.toLowerCase().includes(search.trim().toLowerCase()))
     : conversations;
 
-  function handleSearch(e) {
+  async function handleSearch(e) {
     e.preventDefault();
     if (search.trim()) {
-      setSelectedPeer(search.trim());
-      setSearch("");
+      let peer = search.trim();
+
+      // Si es ENS (.eth o .base.eth) o Basename (.base)
+      if (
+        peer.endsWith('.eth') ||
+        peer.endsWith('.base')
+      ) {
+        setLoadingRes(true);
+        const address = await resolveAnyName(peer);
+        setLoadingRes(false);
+        if (address && address !== "0x0000000000000000000000000000000000000000") {
+          setSelectedPeer(address);
+        } else {
+          alert("No se pudo resolver el nombre ENS o Basename.");
+        }
+        setSearch('');
+        return;
+      }
+
+      // Si es dirección Ethereum
+      if (/^0x[a-fA-F0-9]{40}$/.test(peer)) {
+        setSelectedPeer(peer);
+        setSearch('');
+        return;
+      }
+
+      alert("Introduce una dirección válida o un ENS (.eth) o Basename (.base)");
     }
   }
 
@@ -258,7 +359,7 @@ export default function ChatsScreen({ myAddress, xmtp, onDisconnect }) {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search address or ENS"
+                placeholder="Search address, ENS (.eth) or Basename (.base)"
                 style={{
                   width: "100%",
                   padding: "18px 20px",
@@ -277,6 +378,7 @@ export default function ChatsScreen({ myAddress, xmtp, onDisconnect }) {
                 }}
               >Search</button>
             </form>
+            {loadingRes && <div style={{ color: "#FFC32B", marginTop: 8 }}>Resolviendo nombre...</div>}
           </div>
           {/* Chat */}
           <div
